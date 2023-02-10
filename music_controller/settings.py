@@ -37,7 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api.apps.ApiConfig' # refers to: api folder, apps.py file, ApiConfig class
+    'rest_framework',  # Added to fix issue: TemplateDoesNotExist: rest_framework/api.html
+    'api.apps.ApiConfig'  # refers to: api folder, apps.py file, ApiConfig class
 ]
 
 MIDDLEWARE = [
