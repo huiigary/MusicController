@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@emotion/react": "^11.10.6",
+    "@emotion/styled": "^11.10.6",
+    "@mui/material": "^5.11.11",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -23,6 +26,10 @@
       "react-app",
       "react-app/jest"
     ]
+  },
+  "proxy": "http://127.0.0.1:8000",
+  "ProxComments": {
+    "start": "Use of Proxy to hit server endpoint on a different port(8000) than frontend(3000)"
   },
   "browserslist": {
     "production": [
