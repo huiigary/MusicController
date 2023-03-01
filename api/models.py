@@ -10,12 +10,13 @@ def generate_unique_code():
         code = ''.join(random.choices(string.ascii_uppercase, k=codeLength))
         if (Room.objects.filter(code=code)).count() == 0:
             break
-        return code
+    return code
 
 
 class Room(models.Model):  # models.Model = says this is a model
     # code = a field this Room will have
-    code = models.CharField(max_length=8, default='', unique=True)
+    code = models.CharField(
+        max_length=8, default=generate_unique_code, unique=True)
     # unique=true says I will only have 1 host
     host = models.CharField(max_length=50, unique=True)
     guests_can_pause = models.BooleanField(null=False, default=False)

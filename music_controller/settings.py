@@ -38,10 +38,13 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',  # Added to fix issue: TemplateDoesNotExist: rest_framework/api.html
-    'api.apps.ApiConfig'  # refers to: api folder, apps.py file, ApiConfig class
+    'api.apps.ApiConfig',  # refers to: api folder, apps.py file, ApiConfig class
+    'corsheaders'
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",  # refer to: django-cors-headers
+    "django.middleware.common.CommonMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -49,6 +52,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+CORS_ORIGIN_WHITELIST = [
+    "https://example.com",
+    "https://sub.example.com",
+    "http://localhost:8080",
+    "http://127.0.0.1:9000"
 ]
 
 ROOT_URLCONF = 'music_controller.urls'
