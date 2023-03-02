@@ -11,11 +11,13 @@ import {
   TextField,
   Link,
 } from '@mui/material'
+import { useNavigate } from 'react-router-dom'
 
 export function CreateRoom(props) {
   const defaultVotes = 2
+  const navigate = useNavigate()
 
-  const [guestCanPause, setGuestVote] = useState(true)
+  const [guestCanPause, setGuestPause] = useState(true)
   const [votesToSkip, setVotesToSkip] = useState(defaultVotes)
 
   const handleVotesChange = (e) => {
@@ -24,8 +26,12 @@ export function CreateRoom(props) {
   }
 
   const handleGuestCanPauseChange = (e) => {
-    console.log('clicked guests can pause', e.target.value)
-    setGuestVote(e.target.value === 'true' ? true : false)
+    console.log(
+      'clicked guests can pause...',
+      e.target.value,
+      e.target.value === 'true' ? true : false
+    )
+    setGuestPause(e.target.value === 'true' ? true : false)
   }
 
   const handleRoomButtonClicked = () => {
@@ -36,12 +42,17 @@ export function CreateRoom(props) {
       body: JSON.stringify({
         votes_to_skip: votesToSkip,
         guests_can_pause: guestCanPause, // Note: the body key (votes_to_skip... etc) must match how it is written on the backend side
+        // TOOD: fix guestCanPause to use saved state. It is only using default value.
       }),
     }
 
     // send the request to this endpoint--> then convert to json
     fetch('/api/create-room', requestOptions).then((response) =>
-      response.json().then((data) => console.log('create Room data:', { data }))
+      response.json().then((data) => {
+        console.log('create Room data:', { data, props })
+        // props.history.push(`/room/${data.code}`)
+        navigate(`/room/${data.code}`)
+      })
     )
   }
 

@@ -13,6 +13,24 @@ class RoomView(generics.CreateAPIView):
     # To convert Room's fields into a Serializer for display of Room's fields as JSON
     serializer_class = RoomSerializer
 
+class GetRoom(APIView):
+    serializer_class =RoomSerializer
+    lookup_url_kwarg='code' # parameter is code
+
+    def get(self, request, format=None):
+        code= request.GET.get(self.lookup_url_kwarg)
+        if code!= None:
+            #find room object with this code
+            room = Room.objects.filter(code=code)
+            if len(room)>0:
+                data = RoomSerializer(room[0]).data
+                # is current session key same as current host
+                data['is_host'] = self.request.session.session_key == room[0].host
+                return Response(data, status= status.HTTP_200_OK)
+            #room is not found
+            return Response({'Room not found':'invalid room code'}, status = status.HTTP_404_NOT_FOUND)
+        return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class CreateRoomView(APIView):
     serializer_class = CreateRoomSerializer
