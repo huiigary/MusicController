@@ -29,9 +29,7 @@ export function Room(props) {
   // console.log({ roomCode, votesToSkip, guestsCanSkip, isHost })
   return (
     <div>
-      <h3>
-        Room code: {roomCode} {params.roomCode}
-      </h3>
+      <h3>Room code: {roomCode}</h3>
       <p>Votes: {votesToSkip}</p>
       <p>Guests can skip: {guestsCanSkip?.toString()}</p>
       <p>Host: {isHost?.toString()}</p>

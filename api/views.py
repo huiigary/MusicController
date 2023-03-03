@@ -31,6 +31,25 @@ class GetRoom(APIView):
             return Response({'Room not found':'invalid room code'}, status = status.HTTP_404_NOT_FOUND)
         return Response({'Bad Request': 'Code parameter not found in request'}, status=status.HTTP_400_BAD_REQUEST)
 
+class JoinRoom(APIView):
+    lookup_url_kwarg='code'
+    def post(self, request, format=None):
+        
+        # if no session, create one
+        if not self.request.session.exists(self.request.session.session_key):
+            self.request.session.create()
+        code = request.data.get(self.lookup_url_kwarg)
+        # check if have code
+        if code != None:
+            room_result =Room.objects.filter(code=code)
+            if len(room_result) >0:
+                room = room_result[0]
+                self.request.session['room_code']=room.code # Make a note that user is in this rom... "room_code" is some new key we made in the user session
+                return Response({'message:': 'room joined'}, status=status.HTTP_200_OK)
+            return Response({'Bad Request:': 'invalid room code '}, status=status.HTTP_400_BAD_REQUEST)
+        return Response( {'Bad request': 'invalid post data, did not find code key'}, status=status.HTTP_400_BAD_REQUEST)
+
+        
 
 class CreateRoomView(APIView):
     serializer_class = CreateRoomSerializer
@@ -50,41 +69,15 @@ class CreateRoomView(APIView):
                 room.guest_can_pause = guests_can_pause
                 room.votes_to_skip = votes_to_skip
                 room.save(update_fields=['guests_can_pause', 'votes_to_skip'])
+                self.request.session['room_code']= room.code # Make a note that user is in this rom... "room_code" is some new key we made in the user session
+
                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
             else:
                 room = Room(host=host, guests_can_pause=guests_can_pause,
                             votes_to_skip=votes_to_skip)
                 room.save()
+                self.request.session['room_code']=room.code # Make a note that user is in this rom... "room_code" is some new key we made in the user session
+
                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
 
         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST)
-
-# APIview= base class allows us to override default methods like GET/POST
-# class CreateRoomView(APIView):
-#     serialiazer_class = CreateRoomSerializer
-
-#     def post(self, request, format=None):
-#         # get session id
-#         if not self.request.session.exists(self.request.session.session_key):
-#             self.request.session.create()
-
-#         serializer = self.serializer_class(data=request.data)
-#         if serializer.is_valid():
-#             guests_can_pause = serializer.data.get('guest_can_pause')
-#             votes_to_skip = serializer.data.get('votes_to_skip')
-#             host = self.request.session.session_key
-#             queryset = Room.objects.filter(host=host)
-#             if queryset.exists():
-#                 room = queryset[0]
-#                 room.guests_can_pause = guests_can_pause
-#                 room.votes_to_skip = votes_to_skip
-#                 room.save(update_fields=['guest_can_pause', 'votes_to_skip'])
-#                 return Response(RoomSerializer(room).data, status=status.HTTP_200_OK)
-
-#             else:
-#                 room = Room(host=host, guest_can_pause=guests_can_pause,
-#                             votes_to_skip=votes_to_skip)
-#                 room.save()
-#                 return Response(RoomSerializer(room).data, status=status.HTTP_201_CREATED)
-
-#         return Response({'Bad Request': 'Invalid data...'}, status=status.HTTP_400_BAD_REQUEST)
