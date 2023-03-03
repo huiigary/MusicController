@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router'
+import { useParams, useNavigate } from 'react-router'
+import { Grid, Button, Typography } from '@mui/material'
 
 export function Room(props) {
   const [votesToSkip, setVotesToSkip] = useState(0)
@@ -7,12 +8,21 @@ export function Room(props) {
   const [isHost, setIsHost] = useState(false)
   const [roomCode, setRoomCode] = useState('')
 
-  const params = useParams() // used to get roomID typed in URL
+  const params = useParams() // to get roomID typed in URL
+  const navigate = useNavigate() // to navigate URLs
+  const clearRoomCode = () => setRoomCode(null)
 
   useEffect(() => {
     const getRoomDetails = async () => {
       await fetch(`/api/get-room?code=${params.roomCode}`) // TODO: make this roomCode
-        .then((response) => response.json())
+        .then((response) => {
+          // if no response, clear roomcode and go back to home
+          if (!response.ok) {
+            clearRoomCode()
+            navigate('/')
+          }
+          return response.json()
+        })
         .then((data) => {
           console.log('get room data is:', { data })
           setVotesToSkip(data.votes_to_skip)
@@ -26,13 +36,46 @@ export function Room(props) {
     getRoomDetails()
   }, [])
 
-  // console.log({ roomCode, votesToSkip, guestsCanSkip, isHost })
+  const leaveRoomPressed = () => {
+    // create requestOptions for a POST request
+    const requestOptions = {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    }
+    fetch(`/api/leave-room`, requestOptions)
+      .then((response) => response.json())
+      .then((data) => {
+        console.log('leave room data:', { data })
+        // if we leave room, redirect to the home page
+        navigate('/')
+      })
+  }
+
   return (
-    <div>
-      <h3>Room code: {roomCode}</h3>
-      <p>Votes: {votesToSkip}</p>
-      <p>Guests can skip: {guestsCanSkip?.toString()}</p>
-      <p>Host: {isHost?.toString()}</p>
-    </div>
+    <Grid container>
+      <Grid item xs={12} algin='center'>
+        <Typography variant='h3'>{roomCode}</Typography>
+      </Grid>
+      <Grid item xs={12} algin='center'>
+        <Typography variant='h6'>Votes to skip : {votesToSkip}</Typography>
+      </Grid>
+      <Grid item xs={12} algin='center'>
+        <Typography variant='h6'>
+          Guests can skip: {guestsCanSkip?.toString()}
+        </Typography>
+      </Grid>
+      <Grid item xs={12} algin='center'>
+        <Typography variant='h6'>isHost? {isHost?.toString()}</Typography>
+      </Grid>
+
+      <Button
+        variant='contained'
+        algin='center'
+        color='secondary'
+        onClick={leaveRoomPressed}
+      >
+        Leave Room
+      </Button>
+    </Grid>
   )
 }

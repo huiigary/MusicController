@@ -1,15 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import {
-  BrowserRouter as Router,
-  Navigate,
-  Route,
-  Routes,
-  Link,
-  BrowserRouter,
-} from 'react-router-dom'
-import { CreateRoom } from './CreateRoom'
-import { RoomJoin } from './RoomJoin'
-import { Room } from './Room'
+import { Navigate, Link } from 'react-router-dom'
 import { Button, ButtonGroup, Grid, Typography } from '@mui/material'
 
 export function HomePage(props) {
@@ -46,25 +36,5 @@ export function HomePage(props) {
     )
   }
 
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route
-          exact
-          path='/'
-          element={
-            roomCode ? (
-              <Navigate replace to={`/room/${roomCode}`}></Navigate>
-            ) : (
-              displayHomePage()
-            )
-          }
-        ></Route>
-        <Route path='/join' element={<RoomJoin />} />
-        <Route path='/create' element={<CreateRoom />} />
-        <Route path='/room/:roomCode' element={<Room />} />
-      </Routes>
-    </BrowserRouter>
-  )
-  // return <h1> Home page {props.name}</h1>
+  return roomCode ? <Navigate to={`/room/${roomCode}`} /> : displayHomePage()
 }
