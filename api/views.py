@@ -3,7 +3,7 @@ from django.shortcuts import render
 # generics=Used to inherit generic API view, status=get status codes
 from rest_framework import generics, status
 from .models import Room
-from .serializers import RoomSerializer, CreateRoomSerializer
+from .serializers import RoomSerializer, CreateRoomSerializer, UpdateRoomSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response  # To send custom response from view
 from django.http import JsonResponse
@@ -113,3 +113,33 @@ class LeaveRoom(APIView):
                 room= room_results[0]
                 room.delete()
         return Response({'Message': 'Success'}, status=status.HTTP_200_OK)
+    
+
+class UpdateRoom(APIView):
+    # need to get info from room
+    serializer_class = UpdateRoomSerializer
+    def patch(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            guests_can_pause = serializer.data.get('guests_can_pause')
+            votes_to_skip = serializer.data.get('votes_to_skip')
+            code = serializer.data.get('code')
+            
+            queryset = Room.objects.filter(code=code)
+            if not queryset.exists():
+                return Response({'Message': 'Room not exist'}, status=status.HTTP_404_NOT_FOUND)
+            room = queryset[0]
+            user_id = self.request.session.session_key # check it is the user
+            if room.host !=user_id:
+                return Response({'Message':'You are not the host of the room'}, status=status.HTTP_403_FORBIDDEN)
+            
+
+            # user is the host --> can update room settings
+            room.guests_can_pause = guests_can_pause
+            room.votes_to_skip= votes_to_skip
+            room.save(update_fields=['guests_can_pause', 'votes_to_skip'])
+            return Response(RoomSerializer(room).data, status=status.HTTP_200_OK, )
+        #invalid room serializer
+        return Response({"Bad Request": "Invalid Data "}, status=status.HTTP_400_BAD_REQUEST)
+
+

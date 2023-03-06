@@ -16,3 +16,9 @@ class CreateRoomSerializer(serializers.ModelSerializer):
         model = Room
         # To serialize a request we want to send to POST request
         fields = ('guests_can_pause', 'votes_to_skip')
+class UpdateRoomSerializer(serializers.ModelSerializer):
+    # redefine code field to not reference model(bc code is unique)
+    code = serializers.CharField(validators=[])
+    class Meta:
+        model = Room
+        fields = ('guests_can_pause', 'votes_to_skip', 'code')

@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { Grid, Button, Typography } from '@mui/material'
+import { CreateRoom } from './CreateRoom'
 
 export function Room(props) {
   const [votesToSkip, setVotesToSkip] = useState(0)
   const [guestsCanSkip, setGuestsCanSkip] = useState(false)
   const [isHost, setIsHost] = useState(false)
   const [roomCode, setRoomCode] = useState('')
+  const [showSettings, setShowSettings] = useState(false)
 
   const params = useParams() // to get roomID typed in URL
   const navigate = useNavigate() // to navigate URLs
@@ -36,6 +38,50 @@ export function Room(props) {
     getRoomDetails()
   }, [])
 
+  const updateShowSettings = (value) => {
+    setShowSettings(value)
+  }
+
+  const displaySettingsPage = () => {
+    return (
+      <Grid container spacing={1} align='center'>
+        <Grid item xs={12} align='center'>
+          <CreateRoom
+            update={true}
+            votesToSkip={votesToSkip}
+            guestsCanSkip={guestsCanSkip}
+            code={roomCode}
+            updateCallback={() => {}}
+          ></CreateRoom>
+        </Grid>
+
+        <Grid item xs={12} align='center'>
+          <Button
+            variant='contained'
+            color='secondary'
+            onClick={updateShowSettings(false)}
+          >
+            Close
+          </Button>
+        </Grid>
+      </Grid>
+    )
+  }
+
+  const displaySettingsButton = () => {
+    return (
+      <Grid item xs={12} algin='center'>
+        <Button
+          variant='contained'
+          color='primary'
+          onClick={updateShowSettings(true)}
+        >
+          Settings
+        </Button>
+      </Grid>
+    )
+  }
+
   const leaveRoomPressed = () => {
     // create requestOptions for a POST request
     const requestOptions = {
@@ -52,30 +98,37 @@ export function Room(props) {
   }
 
   return (
-    <Grid container>
-      <Grid item xs={12} algin='center'>
-        <Typography variant='h3'>{roomCode}</Typography>
-      </Grid>
-      <Grid item xs={12} algin='center'>
-        <Typography variant='h6'>Votes to skip : {votesToSkip}</Typography>
-      </Grid>
-      <Grid item xs={12} algin='center'>
-        <Typography variant='h6'>
-          Guests can skip: {guestsCanSkip?.toString()}
-        </Typography>
-      </Grid>
-      <Grid item xs={12} algin='center'>
-        <Typography variant='h6'>isHost? {isHost?.toString()}</Typography>
-      </Grid>
+    // conditionally display settings page or room page
+    showSettings ? (
+      displaySettingsPage
+    ) : (
+      <Grid container>
+        <Grid item xs={12} algin='center'>
+          <Typography variant='h3'>{roomCode}</Typography>
+        </Grid>
+        <Grid item xs={12} algin='center'>
+          <Typography variant='h6'>Votes to skip : {votesToSkip}</Typography>
+        </Grid>
+        <Grid item xs={12} algin='center'>
+          <Typography variant='h6'>
+            Guests can skip: {guestsCanSkip?.toString()}
+          </Typography>
+        </Grid>
+        <Grid item xs={12} algin='center'>
+          <Typography variant='h6'>isHost? {isHost?.toString()}</Typography>
+        </Grid>
 
-      <Button
-        variant='contained'
-        algin='center'
-        color='secondary'
-        onClick={leaveRoomPressed}
-      >
-        Leave Room
-      </Button>
-    </Grid>
+        {isHost ? displaySettingsButton() : null}
+
+        <Button
+          variant='contained'
+          algin='center'
+          color='secondary'
+          onClick={leaveRoomPressed}
+        >
+          Leave Room
+        </Button>
+      </Grid>
+    )
   )
 }
