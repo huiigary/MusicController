@@ -15,30 +15,31 @@ export function Room(props) {
   const clearRoomCode = () => setRoomCode(null)
 
   useEffect(() => {
-    const getRoomDetails = async () => {
-      await fetch(`/api/get-room?code=${params.roomCode}`) // TODO: make this roomCode
-        .then((response) => {
-          // if no response, clear roomcode and go back to home
-          if (!response.ok) {
-            clearRoomCode()
-            navigate('/')
-          }
-          return response.json()
-        })
-        .then((data) => {
-          console.log('get room data is:', { data })
-          setVotesToSkip(data.votes_to_skip)
-          setGuestsCanSkip(data.guests_can_pause)
-          setIsHost(data.is_host)
-        })
-    }
-
     setRoomCode(params.roomCode)
-    console.log('room code is:', params?.roomCode, { roomCode }) // note: calling setState doesnt change state in the running code--> Need to save the nextState in the
     getRoomDetails()
+    console.log('check room  is:', params?.roomCode, { roomCode, isHost }) // note: calling setState doesnt change state in the running code--> Need to save the nextState in the
   }, [])
 
+  const getRoomDetails = async () => {
+    await fetch(`/api/get-room?code=${params.roomCode}`) // TODO: make this roomCode
+      .then((response) => {
+        // if no response, clear roomcode and go back to home
+        if (!response.ok) {
+          clearRoomCode()
+          navigate('/')
+        }
+        return response.json()
+      })
+      .then((data) => {
+        console.log('get room data is:', { data })
+        setVotesToSkip(data.votes_to_skip)
+        setGuestsCanSkip(data.guests_can_pause)
+        setIsHost(data.is_host)
+      })
+  }
+
   const updateShowSettings = (value) => {
+    console.log('update show settings ', { value })
     setShowSettings(value)
   }
 
@@ -49,9 +50,9 @@ export function Room(props) {
           <CreateRoom
             update={true}
             votesToSkip={votesToSkip}
-            guestsCanSkip={guestsCanSkip}
+            guestsCanPause={guestsCanSkip}
             code={roomCode}
-            updateCallback={() => {}}
+            updateCallback={getRoomDetails}
           ></CreateRoom>
         </Grid>
 
@@ -59,7 +60,7 @@ export function Room(props) {
           <Button
             variant='contained'
             color='secondary'
-            onClick={updateShowSettings(false)}
+            onClick={() => updateShowSettings(false)}
           >
             Close
           </Button>
@@ -74,7 +75,7 @@ export function Room(props) {
         <Button
           variant='contained'
           color='primary'
-          onClick={updateShowSettings(true)}
+          onClick={() => updateShowSettings(true)}
         >
           Settings
         </Button>
@@ -100,7 +101,7 @@ export function Room(props) {
   return (
     // conditionally display settings page or room page
     showSettings ? (
-      displaySettingsPage
+      displaySettingsPage()
     ) : (
       <Grid container>
         <Grid item xs={12} algin='center'>
@@ -117,9 +118,7 @@ export function Room(props) {
         <Grid item xs={12} algin='center'>
           <Typography variant='h6'>isHost? {isHost?.toString()}</Typography>
         </Grid>
-
         {isHost ? displaySettingsButton() : null}
-
         <Button
           variant='contained'
           algin='center'

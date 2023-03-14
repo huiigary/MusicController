@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import {
   Grid,
   Typography,
@@ -10,15 +10,28 @@ import {
   RadioGroup,
   TextField,
   Link,
+  Collapse,
 } from '@mui/material'
 import { useNavigate } from 'react-router-dom'
+import Alert from '@material-ui/lab/Alert'
 
-export function CreateRoom(props) {
+const defaultProps = {
+  votesToSkip: 2,
+  guestsCanPause: true,
+  update: false,
+  roomCode: null,
+  updateCallback: () => {},
+}
+export function CreateRoom(props = defaultProps) {
+  useEffect(() => {
+    console.log('Create room props:', { props })
+  }, [])
   const defaultVotes = 2
   const navigate = useNavigate()
-
-  const [guestCanPause, setGuestPause] = useState(true)
+  const [guestsCanPause, setGuestPause] = useState(true)
   const [votesToSkip, setVotesToSkip] = useState(defaultVotes)
+  const [successMessage, setSuccessMessage] = useState('')
+  const [errorMessage, setErrorMessage] = useState('')
 
   const handleVotesChange = (e) => {
     console.log('handle votes changing:', e.target.value)
@@ -41,7 +54,7 @@ export function CreateRoom(props) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         votes_to_skip: votesToSkip,
-        guests_can_pause: guestCanPause, // Note: the body key (votes_to_skip... etc) must match how it is written on the backend side
+        guests_can_pause: guestsCanPause, // Note: the body key (votes_to_skip... etc) must match how it is written on the backend side
         // TOOD: fix guestCanPause to use saved state. It is only using default value.
       }),
     }
@@ -50,17 +63,104 @@ export function CreateRoom(props) {
     fetch('/api/create-room', requestOptions).then((response) =>
       response.json().then((data) => {
         console.log('create Room data:', { data, props })
-        // props.history.push(`/room/${data.code}`)
         navigate(`/room/${data.code}`)
       })
     )
   }
 
+  const updateRoomPressed = () => {
+    // create requestOptions for a POST request
+    console.log(
+      { props, votesToSkip, guestCanPause: guestsCanPause },
+      props.roomCode
+    )
+    const requestOptions = {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        votes_to_skip: votesToSkip,
+        guests_can_pause: guestsCanPause,
+        code: props.code,
+      }),
+    }
+
+    console.log({ requestOptions })
+    fetch(`/api/update-room`, requestOptions).then((response) => {
+      console.log('update room response', { response })
+      if (response.ok) {
+        setSuccessMessage('Room updated successfully')
+      } else {
+        setErrorMessage('Error updating room...')
+      }
+      // use the function from props (from Room)
+      props.updateCallback()
+    })
+  }
+
+  const displayCreateButtons = () => {
+    return (
+      <Grid container>
+        <Grid xs={12} item align='center'>
+          <Button
+            color='primary'
+            variant='outlined'
+            onClick={handleRoomButtonClicked}
+          >
+            Create a Room
+          </Button>
+          <Button
+            color='secondary'
+            variant='contained'
+            href='/'
+            component={Link}
+          >
+            Back
+          </Button>
+        </Grid>
+      </Grid>
+    )
+  }
+
+  const displayUpdateButtons = () => {
+    return (
+      <Grid container>
+        <Grid xs={12} item align='center'>
+          <Button
+            color='primary'
+            variant='outlined'
+            onClick={updateRoomPressed}
+          >
+            Update Room
+          </Button>
+        </Grid>
+      </Grid>
+    )
+  }
+
+  const title = props?.update ? 'Update Room' : 'Create Room'
+
   return (
     <Grid container spacing={1}>
       <Grid item xs={12} align='center'>
+        {/* Upon update --> display user success/fail messages */}
+        {/* <Collapse in={successMessage !== '' || errorMessage !== ''}>
+          {successMessage !== '' ? (
+            <Alert
+              severity='success'
+              onClose={() => {
+                setSuccessMessage('')
+              }}
+            >
+              {successMessage}
+            </Alert>
+          ) : (
+            <Alert severity='error' onClose={() => setErrorMessage('')}>
+              {errorMessage}
+            </Alert>
+          )}
+        </Collapse> */}
         <Typography component='h4' variant='h4'>
-          Create Room
+          {title}
         </Typography>
       </Grid>
       {/* To control playback */}
@@ -71,8 +171,8 @@ export function CreateRoom(props) {
           </FormHelperText>
           <RadioGroup
             row
-            defaultValue={true}
-            onChange={(e) => handleGuestCanPauseChange(e)}
+            defaultValue={props.guestsCanPause}
+            onChange={handleGuestCanPauseChange}
           >
             <FormControlLabel
               value={true}
@@ -95,8 +195,9 @@ export function CreateRoom(props) {
           <TextField
             required={true}
             type='number'
-            defaultValue={defaultVotes}
-            onChange={(e) => handleVotesChange(e)}
+            defaultValue={props?.votesToSkip}
+            // onChange={(e) => handleVotesChange(e)}
+            onChange={handleVotesChange}
             inputProps={{
               min: 1,
               style: { textAlign: 'center' },
@@ -108,18 +209,7 @@ export function CreateRoom(props) {
         </FormControl>
       </Grid>
       {/* Buttons to submit/goBack ... component will be like a link*/}
-      <Grid xs={12} item align='center'>
-        <Button
-          color='primary'
-          variant='outlined'
-          onClick={() => handleRoomButtonClicked()}
-        >
-          Create a Room
-        </Button>
-        <Button color='secondary' variant='contained' href='/' component={Link}>
-          Back
-        </Button>
-      </Grid>
+      {props?.update ? displayUpdateButtons() : displayCreateButtons()}
     </Grid>
   )
 }
